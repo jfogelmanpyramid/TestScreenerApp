@@ -44,8 +44,16 @@ class TvControls extends React.Component {
   render() {
     return (
       <div>
-        <div>POWER: {this.props.PowerLevel}</div>
-        <div>RESIDUAL POWER: {this.props.ResidualPower}</div>
+        <div style={{
+          "height": "5px",
+          "backgroundColor": "hsl(" + (60 - (this.props.PowerLevel * 60) / 200) + ", 100%, 50%)"
+        }}>
+          &nbsp;&nbsp;</div>
+        <div style={{
+          "height": "5px",
+          "backgroundColor": "hsl(" + (60 - (this.props.ResidualPower * 60) / 100) + ", 100%, 50%)"
+        }}>
+          &nbsp;&nbsp;</div>
         <div className="centerMeWithoutWrapGrey">
           <div>
             <div className="controlLabel">TV Controls</div>
@@ -89,35 +97,35 @@ class DvdControls extends React.Component {
             <div className="controlLabel">DVD Controls</div>
           </div>
           <p className='newline'></p>
-        <ImageButton src={this.props.dvdPowerSrc} alt="DVD POWER" onClick={() => { this.props.switchDvdPower() }}></ImageButton>
-        <ImageButton src={this.props.dvdPlaySrc} alt="DVD PLAY" onClick={() => { this.props.dvdPlay() }}></ImageButton>
-        <ImageButton src={this.props.dvdPauseSrc} alt="DVD PAUSE" onClick={() => { this.props.dvdPause() }}></ImageButton>
-        <ImageButton src={this.props.dvdStopSrc} alt="DVD STOP" onClick={() => { this.props.dvdStop() }}></ImageButton>
-        <ImageButton src={this.props.dvdEjectSrc} alt="DVD EJECT" onClick={() => { this.props.dvdEject() }}></ImageButton>
-        <div classname="dvdStatusLabel" style={{
-          "font-family": "Arial",
-          "font-weight": "bold",
-          "font-size": "large",
-          backgroundColor:
-            this.props.dvdPower ? "lime" : "red"
-        }}>
-          DVD Status: {this.props.dvdPower ? 'DVD ON' : 'DVD OFF'} </div>
-        <div style={{
-          "font-family": "Arial",
-          "font-weight": "bold",
-          "font-size": "large",
-          "padding-left": "10px",
-          backgroundColor:
-            this.props.dvdState === dvdStateStopped ? 'red' :
-              (this.props.dvdState === dvdStatePlaying ? 'lime' :
-                'orange')
-        }}> {
-            this.props.dvdState === dvdStateStopped ? 'DVD STOPPED' :
-              (this.props.dvdState === dvdStatePlaying ? 'DVD PLAYING' :
-                'DVD PAUSED')
-          } </div>
+          <ImageButton src={this.props.dvdPowerSrc} alt="DVD POWER" onClick={() => { this.props.switchDvdPower() }}></ImageButton>
+          <ImageButton src={this.props.dvdPlaySrc} alt="DVD PLAY" onClick={() => { this.props.dvdPlay() }}></ImageButton>
+          <ImageButton src={this.props.dvdPauseSrc} alt="DVD PAUSE" onClick={() => { this.props.dvdPause() }}></ImageButton>
+          <ImageButton src={this.props.dvdStopSrc} alt="DVD STOP" onClick={() => { this.props.dvdStop() }}></ImageButton>
+          <ImageButton src={this.props.dvdEjectSrc} alt="DVD EJECT" onClick={() => { this.props.dvdEject() }}></ImageButton>
+          <div classname="dvdStatusLabel" style={{
+            "font-family": "Arial",
+            "font-weight": "bold",
+            "font-size": "large",
+            backgroundColor:
+              this.props.dvdPower ? "lime" : "red"
+          }}>
+            DVD Status: {this.props.dvdPower ? 'DVD ON' : 'DVD OFF'} </div>
+          <div style={{
+            "font-family": "Arial",
+            "font-weight": "bold",
+            "font-size": "large",
+            "padding-left": "10px",
+            backgroundColor:
+              this.props.dvdState === dvdStateStopped ? 'red' :
+                (this.props.dvdState === dvdStatePlaying ? 'lime' :
+                  'orange')
+          }}> {
+              this.props.dvdState === dvdStateStopped ? 'DVD STOPPED' :
+                (this.props.dvdState === dvdStatePlaying ? 'DVD PLAYING' :
+                  'DVD PAUSED')
+            } </div>
 
-      </div>
+        </div>
       </div>
     )
   }
@@ -191,8 +199,15 @@ class Screener extends React.Component {
       return;
 
     if (!this.state.tvPower && !this.state.ShortedFlag) {
+      var currentVolume = this.state.volume;
+      var originalVolume = 50;
+      var volumePower = this.state.PowerLevel;
+      volumePower = (TV_VOLUME * currentVolume * 0.75) - (TV_VOLUME * originalVolume * 0.75);
+      var newPower = this.state.PowerLevel;
+      newPower = newPower + TV_ON - TV_OFF + volumePower;
+
       this.setState({ tvPower: true });
-      this.setState({ PowerLevel: this.state.PowerLevel + TV_ON - TV_OFF });
+      this.setState({ PowerLevel: newPower });
       this.setState({
         ResidualPower: this.state.ResidualPower
           + TV_ON * 0.10
@@ -202,8 +217,15 @@ class Screener extends React.Component {
       this.setState({ triggerRefresh: true });
     }
     else if (this.state.tvPower && !this.state.ShortedFlag) {
+      currentVolume = this.state.volume;
+      originalVolume = 50;
+      volumePower = this.state.PowerLevel;
+      volumePower = (TV_VOLUME * currentVolume * 0.75) - (TV_VOLUME * originalVolume * 0.75);
+      newPower = this.state.PowerLevel;
+      newPower += TV_OFF - TV_ON - volumePower;
+
       this.setState({ tvPower: false });
-      this.setState({ PowerLevel: this.state.PowerLevel + TV_OFF - TV_ON });
+      this.setState({ PowerLevel: newPower });
       this.setState({
         ResidualPower: this.state.ResidualPower
           + TV_ON * 0.10
@@ -274,16 +296,14 @@ class Screener extends React.Component {
     }
   }
 
-  dvdSetToPause()
-  {
+  dvdSetToPause() {
     this.setState({ dvdState: dvdStatePaused });
     this.setState({ PowerLevel: this.state.PowerLevel + DVD_PAUSE - DVD_PLAY });
     this.setState({ ResidualPower: this.state.ResidualPower + DVD_PAUSE * 0.10 });
     this.setState({ triggerRefresh: true });
   }
 
-  dvdSetToPlay()
-  {
+  dvdSetToPlay() {
     this.setState({ dvds: dvdStatePlaying });
     this.setState({ PowerLevel: this.state.PowerLevel + DVD_PLAY - DVD_PAUSE });
     this.setState({ ResidualPower: this.state.ResidualPower + DVD_PLAY * 0.10 });
@@ -327,6 +347,7 @@ class Screener extends React.Component {
       this.setState({ volumeUpSrc: require('./img/GreenUpGrey.png') });
       this.setState({ volumeDownSrc: require('./img/GreenDownGrey.png') });
       this.setState({ muteSrc: require('./img/RedVolumeGrey.png') });
+      this.setState({ dvdStopSrc: require('./img/Stop.png') });
     }
     else {
       this.setState({ tvPowerSrc: require('./img/GreenPowerOn.png') });
@@ -338,10 +359,32 @@ class Screener extends React.Component {
         this.setState({ muteSrc: require('./img/DarkVolumeRedX.png') });
     }
 
+    if (this.state.dvdEjected)
+      this.setState({ dvdEjectSrc: require('./img/EjectActive.png') });
+    else
+      this.setState({ dvdEjectSrc: require('./img/Eject.png') });
+
     if (!this.state.dvdPower) {
       this.setState({ dvdPowerSrc: require('./img/DvdPowerOff.png') });
+      this.setState({ dvdPlaySrc: require('./img/Play.png') });
+      this.setState({ dvdPauseSrc: require('./img/Pause.png') });
     } else {
       this.setState({ dvdPowerSrc: require('./img/DvdPowerOn.png') });
+      if (this.state.dvdState === dvdStatePlaying)
+        this.setState({ dvdPlaySrc: require('./img/PlayActive.png') });
+      else
+        this.setState({ dvdPlaySrc: require('./img/Play.png') });
+
+      if (this.state.dvdState === dvdStatePaused)
+        this.setState({ dvdPauseSrc: require('./img/PauseActive.png') });
+      else
+        this.setState({ dvdPauseSrc: require('./img/Pause.png') });
+
+      if (this.state.dvdState === dvdStateStopped)
+        this.setState({ dvdStopSrc: require('./img/StopActive.png') });
+      else
+        this.setState({ dvdStopSrc: require('./img/Stop.png') });
+
     }
 
   }
@@ -481,25 +524,25 @@ class Screener extends React.Component {
         <p className='newline'></p>
         <div className="centerMeWithoutWrap">
           <div classname="buttonPanel">
-        <DvdControls
-          dvdPowerSrc={this.state.dvdPowerSrc}
-          dvdPlaySrc={this.state.dvdPlaySrc}
-          dvdPauseSrc={this.state.dvdPauseSrc}
-          dvdStopSrc={this.state.dvdStopSrc}
-          dvdEjectSrc={this.state.dvdEjectSrc}
-          refreshFxn={() => this.state.refreshFxn()}
-          switchDvdPower={() => this.switchDvdPower()}
-          dvdStop={() => this.dvdStop()}
-          dvdPlay={() => this.dvdPlay()}
-          dvdPause={() => this.dvdPause()}
-          dvdEject={() => this.dvdEject()}
-          dvdPower={this.state.dvdPower}
-          dvdState={this.state.dvdState}
-          PowerLevel={this.state.PowerLevel}
-          ResidualPower={this.state.ResidualPower}
-        ></DvdControls>
+            <DvdControls
+              dvdPowerSrc={this.state.dvdPowerSrc}
+              dvdPlaySrc={this.state.dvdPlaySrc}
+              dvdPauseSrc={this.state.dvdPauseSrc}
+              dvdStopSrc={this.state.dvdStopSrc}
+              dvdEjectSrc={this.state.dvdEjectSrc}
+              refreshFxn={() => this.state.refreshFxn()}
+              switchDvdPower={() => this.switchDvdPower()}
+              dvdStop={() => this.dvdStop()}
+              dvdPlay={() => this.dvdPlay()}
+              dvdPause={() => this.dvdPause()}
+              dvdEject={() => this.dvdEject()}
+              dvdPower={this.state.dvdPower}
+              dvdState={this.state.dvdState}
+              PowerLevel={this.state.PowerLevel}
+              ResidualPower={this.state.ResidualPower}
+            ></DvdControls>
+          </div>
         </div>
-      </div>
       </div>
 
     );
